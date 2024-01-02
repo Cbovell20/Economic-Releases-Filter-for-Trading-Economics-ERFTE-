@@ -1,7 +1,7 @@
 # Economic-Releases-Filter-for-Trading-Economics-ERFTE-
 
 ## DESCRIPTION
-# The Economic Releases Filter for Trading Economics (ERFTE) is a versatile R-based tool designed for economists, traders, and anyone interested in staying informed about crucial economic indicators. This project streamlines the process of retrieving essential economic release information for specific countries, allowing users to focus on key data points that influence financial markets. 
+The Economic Releases Filter for Trading Economics (ERFTE) is a versatile R-based tool designed for economists, traders, and anyone interested in staying informed about crucial economic indicators. This project streamlines the process of retrieving essential economic release information for specific countries, allowing users to focus on key data points that influence financial markets. 
 
 ## Features:
 - Customized Selection: Easily specify the economic releases you are interested in for each country.
