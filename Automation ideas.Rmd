@@ -1,0 +1,193 @@
+---
+title: "TWA Automation"
+author: 'By: Curtis Bovell'
+date: "25/09/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Automated Filter List For TWA
+```{r}
+
+
+library(rvest)
+library(readxl)
+library(dplyr)
+library(stringr)
+
+# You can replace the Variable copied_data any part from the release calendar, 
+# I'm Using the Oct 16-20, 2023 data for the (US)
+
+# Data
+copied_data <- "
+Monday November 20 2023	Actual	Previous	Consensus	Forecast		
+10:35 PM	
+JP
+20-Year JGB Auction		1.553%			
+Thursday November 23 2023	Actual	Previous	Consensus	Forecast		
+06:30 PM	
+JP
+Inflation Rate YoY OCT		3.0%		3.2%	
+06:30 PM	
+JP
+Core Inflation Rate YoY OCT		2.8%		2.9%	
+06:30 PM	
+JP
+Inflation Rate Ex-Food and Energy YoY OCT		4.2%		4.4%	
+06:30 PM	
+JP
+Inflation Rate MoM OCT		0.3%		0.4%	
+06:50 PM	
+JP
+Foreign Bond Investment NOV/18						
+06:50 PM	
+JP
+Stock Investment by Foreigners NOV/18						
+07:30 PM	
+JP
+Jibun Bank Manufacturing PMI Flash NOV		48.7		49.1	
+07:30 PM	
+JP
+Jibun Bank Services PMI Flash NOV		51.6		52.3	
+07:30 PM	
+JP
+Jibun Bank Composite PMI Flash NOV		50.5		51	
+10:35 PM	
+JP
+3-Month Bill Auction						
+Friday November 24 2023	Actual	Previous	Consensus	Forecast		
+12:00 AM	
+JP
+Coincident Index Final SEP		114.6		114.7	
+12:00 AM	
+JP
+Leading Economic Index Final SEP		109.2		108.7	
+Monday November 27 2023	Actual	Previous	Consensus	Forecast		
+10:35 PM	
+JP
+40-Year JGB Auction		1.725%			
+	
+"
+
+```
+
+Upload filter list for the economic indicators
+&
+Organize the scraped text then concatenate it all
+
+```{r}
+
+# Import your filtered list, I already did that with the excel spreadsheet for the top indicators
+# My top indicators for each country is called filtered_indicators
+
+######################################################################################
+# ONLY ONE STEP THEN YOU DON't HAVE TO DO IT AGAIN
+# Editing some parts to match
+filtered_indicators <- Copy_of_Catalogue_of_Indicators_for_TWA_sc
+### Split the indicators For Each Country
+Euro <- c(filtered_indicators$Euro)
+Mexico <- c(filtered_indicators$Mexico)
+China <- c(filtered_indicators$China)
+US <- c(filtered_indicators$US)
+UK <- c(filtered_indicators$UK)
+Italy <- c(filtered_indicators$Italy)
+Japan <- c(filtered_indicators$Japan)
+France <- c(filtered_indicators$France)
+Germany <- c(filtered_indicators$Germany)
+
+### Remove NA
+Euro <- na.omit(Euro)
+Mexico <- na.omit(Mexico)
+China <- na.omit(China)
+US <- na.omit(US)
+UK <- na.omit(UK)
+Italy <- na.omit(Italy)
+Japan <- na.omit(Japan)
+France <- na.omit(France)
+Germany <- na.omit(Germany)
+```
+
+
+Time To Use The Function
+
+
+```{r}
+#MUST DO EVERY TIME
+
+# Spliting the data into substrings, that way easier and more clean
+lines <- strsplit(copied_data, "\n")[[1]]
+
+# Intializing some variables we need
+output_list <- list()
+current_date <- ""
+current_country <- ""
+format_date <- ""
+
+# Initialize the output_list
+## DON'T FORGET TO CHANGE THE FUNCTION BASED ON WHAT COUNTRY YOUR USING 
+                  
+                  #EDIT
+for (indicator in Japan) { # Using the US For this Function
+  output_list[[indicator]] <- NULL
+}
+
+# Define the string to remove (We Only Need the Consensus and Previous)
+remove_words <- "\tActual\tPrevious\tConsensus\tForecast\t\t"
+
+
+# Helper function to extract indicator data (Very Important For Final Product)
+extract_indicator_data <- function(line, current_country, format_date) {
+  parts <- unlist(strsplit(line, "\t")) # Converted into a vector, split into substrings, separate "\t"
+  indicator_name <- parts[2]
+  previous <- gsub("\\s*", "", parts[length(parts) - 2]) # Removes white spaces and takes second last part
+  consensus <- gsub("\\s*", "", parts[length(parts) - 1])  # Removes white spaces and takes last part
+  data_str <- paste(format_date,":",indicator, " | Consensus:", consensus, " | Previous:", previous, " |") 
+  # How we want to display our data
+  return(data_str)
+}
+
+# Loop through each line
+for (line in lines) {
+  if (grepl("^[A-Z][a-z]+ [A-Z][a-z]+ [0-9]{1,2} [0-9]{4}", line)) {
+    
+    #####Extract the date
+    
+    current_date <- gsub("^([A-Za-z]+) ([0-9]+) ([0-9]{4}).*$", "\\1 \\2 (\\1)", line)
+    adj_date <- gsub(remove_words, "", current_date)
+    date_obj <- as.Date(adj_date, format = "%A %B %d %Y")
+    format_date <- format(date_obj, "%b %d (%a)")
+  } else if (grepl("^[0-9]{1,2}:[0-9]{2} [APM]{2}", line)) {
+   
+    #####Skip time entries
+    
+    next
+  } else if (line != "") {
+    
+    #####Process indicators
+                      #EDIT
+    for (indicator in Japan) {
+      if (grepl(indicator, line, ignore.case = TRUE)) {
+    
+        #### Extract values and add to the output
+        
+        indicator_data <- extract_indicator_data(line, current_country, format_date)
+        output_list[[indicator]] <- c(output_list[[indicator]], indicator_data)
+      }
+    }
+  }
+}
+
+##### Print The Results, for EACH indicator         #EDIT
+for (indicator in Japan) {
+  if (!is.null(output_list[[indicator]])) {
+    cat(output_list[[indicator]], sep = "\n")
+    cat("\n\n")
+  }
+}
+
+
+####  Therefore, all you need to edit are the copied_data and the country indicators your using
+```
+
